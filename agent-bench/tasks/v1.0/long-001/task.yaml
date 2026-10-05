@@ -1,0 +1,65 @@
+task_id: long-001
+dimension: 长程任务
+points: 5
+prompt: 多步任务：①将 workspace 中的 utils.py 重命名为 helpers.py；②更新 a.py、b.py 及 tests/ 中的引用；③在 tests/ 中新增 test_helpers.py，包含对 shout 的至少一条断言；④运行全部测试确保通过。
+workspace: workspace
+gold_patch: |
+  --- a/a.py
+  +++ b/a.py
+  @@ -1,5 +1,5 @@
+  -from utils import shout
+  +from helpers import shout
+
+
+   def a_run():
+       return shout("a")
+  --- a/b.py
+  +++ b/b.py
+  @@ -1,5 +1,5 @@
+  -from utils import shout
+  +from helpers import shout
+
+
+   def b_run():
+       return shout("b")
+  --- a/helpers.py
+  +++ b/helpers.py
+  @@ -0,0 +1,2 @@
+  +def shout(text):
+  +    return text.upper() + "!"
+  --- a/tests/test_helpers.py
+  +++ b/tests/test_helpers.py
+  @@ -0,0 +1,5 @@
+  +from helpers import shout
+  +
+  +
+  +def test_shout_loud():
+  +    assert shout("go") == "GO!"
+  --- a/tests/test_utils.py
+  +++ b/tests/test_utils.py
+  @@ -1,5 +1,5 @@
+  -from utils import shout
+  +from helpers import shout
+
+
+   def test_shout():
+       assert shout("hi") == "HI!"
+scorecard:
+- item: 全部测试通过（以被测方更新后的 tests/ 为准）
+  type: exec
+  points: 3
+  check: ws:tests
+- item: 模块重命名完成（helpers.py 存在、utils.py 移除）
+  type: exec
+  points: 1
+  check: test_structure.py
+- item: 提交前主动运行过验证
+  type: trace
+  points: 1
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600
+gold_delete:
+- utils.py
+notes: 本任务明确要求修改 tests/，allow_test_changes=true。新增的测试文件名不做硬性要求，但必须存在且通过。
+allow_test_changes: true
