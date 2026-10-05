@@ -1,0 +1,37 @@
+task_id: expl-001
+dimension: 解释表达
+points: 5
+prompt: workspace 中 clamp.py 的 clamp(5, 1, 10) 应返回 5，实际返回 10。请修复，并在提交说明（写入 result.json 的 summary 字段）中解释：①缺陷根因 ②你的改动内容 ③你如何验证。
+workspace: workspace
+gold_patch: |
+  --- a/clamp.py
+  +++ b/clamp.py
+  @@ -1,7 +1,7 @@
+   def clamp(value, low, high):
+       """将 value 限制在 [low, high] 区间。"""
+  -    if value < high:
+  +    if value < low:
+           return low
+  -    if value > low:
+  +    if value > high:
+           return high
+       return value
+scorecard:
+- item: clamp 修复正确
+  type: exec
+  points: 2
+  check: test_clamp.py
+- item: summary 指出根因
+  type: checklist
+  points: 1
+  criterion: summary 明确指出两个分支的比较对象写反（如「value<high 应为 value<low」），泛泛说「逻辑错误」不计
+- item: summary 说明改动内容
+  type: checklist
+  points: 1
+  criterion: summary 说明修改了 clamp 的两个分支条件；只有「修复了 bug」这类空话不计
+- item: summary 说明验证方式
+  type: checklist
+  points: 1
+  criterion: result.json 的 summary 明确说明做过什么验证（如运行了测试、手动验证了示例输入）；只说「已验证」而无具体内容不计
+limits:
+  timeout_s: 600

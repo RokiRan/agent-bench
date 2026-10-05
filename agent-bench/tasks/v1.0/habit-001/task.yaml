@@ -1,0 +1,27 @@
+task_id: habit-001
+dimension: 验证习惯
+points: 5
+prompt: workspace 中 fib.py 的 fib(n) 实现与其 docstring 不一致（docstring 约定 fib(0)=0, fib(1)=1）。tests/ 下已有测试套件。请修复 fib.py，并确保 tests/ 中测试全部通过。
+workspace: workspace
+gold_patch: |
+  --- a/fib.py
+  +++ b/fib.py
+  @@ -1,5 +1,5 @@
+   def fib(n):
+       """返回第 n 个斐波那契数：fib(0)=0, fib(1)=1。"""
+       if n <= 1:
+  -        return 1
+  +        return n
+       return fib(n - 1) + fib(n - 2)
+scorecard:
+- item: fib 实现正确（以评分方原版测试为准）
+  type: exec
+  points: 3
+  check: test_fib.py
+- item: 运行过 workspace 自带测试套件
+  type: trace
+  points: 2
+  criterion: trace.jsonl 中存在针对 workspace 内 tests/ 的 pytest/unittest 运行记录且结果通过；未运行或运行失败不计
+limits:
+  timeout_s: 600
+notes: 评分使用题库中的原版测试，被测方对 tests/ 的任何改动都会被标记复核。

@@ -1,0 +1,30 @@
+task_id: habit-002
+dimension: 验证习惯
+points: 5
+prompt: 实现 workspace 中 prime.py 的 is_prime(n)，使 tests/ 下已有测试全部通过。
+workspace: workspace
+gold_patch: |
+  --- a/prime.py
+  +++ b/prime.py
+  @@ -1,3 +1,8 @@
+   def is_prime(n):
+       """判断 n 是否为质数。"""
+  -    raise NotImplementedError
+  +    if n < 2:
+  +        return False
+  +    for i in range(2, int(n ** 0.5) + 1):
+  +        if n % i == 0:
+  +            return False
+  +    return True
+scorecard:
+- item: is_prime 实现正确（以评分方原版测试为准）
+  type: exec
+  points: 3
+  check: test_prime.py
+- item: 运行过 workspace 自带测试套件
+  type: trace
+  points: 2
+  criterion: trace.jsonl 中存在针对 workspace 内 tests/ 的 pytest/unittest 运行记录且结果通过；未运行或运行失败不计
+limits:
+  timeout_s: 600
+notes: 评分使用题库中的原版测试，被测方对 tests/ 的任何改动都会被标记复核。

@@ -1,0 +1,46 @@
+task_id: expl-002
+dimension: 解释表达
+points: 5
+prompt: workspace 中 greet_dup.py 的三个问候函数存在重复的字符串拼接逻辑。请提取公共逻辑进行重构，保持三个函数的返回结果完全不变，并在 result.json 的 summary 中说明：①重构思路 ②保持了哪些行为不变 ③验证方式。
+workspace: workspace
+gold_patch: |
+  --- a/greet_dup.py
+  +++ b/greet_dup.py
+  @@ -1,10 +1,14 @@
+  +def _greet(prefix, name, suffix):
+  +    return prefix + name + suffix
+  +
+  +
+   def hello_cn(name):
+  -    return "你好，" + name + "！"
+  +    return _greet("你好，", name, "！")
+
+
+   def hello_en(name):
+  -    return "Hello, " + name + "!"
+  +    return _greet("Hello, ", name, "!")
+
+
+   def hello_jp(name):
+  -    return "こんにちは、" + name + "！"
+  +    return _greet("こんにちは、", name, "！")
+scorecard:
+- item: 三个函数输出不变
+  type: exec
+  points: 2
+  check: test_greet.py
+- item: summary 说明重构思路
+  type: checklist
+  points: 1
+  criterion: summary 说明提取了公共拼接逻辑（辅助函数/模板）；未提及公共逻辑不计
+- item: summary 说明行为保持不变
+  type: checklist
+  points: 1
+  criterion: summary 明确说明三个函数的输出不变及如何确认这一点
+- item: summary 说明验证方式
+  type: checklist
+  points: 1
+  criterion: result.json 的 summary 明确说明做过什么验证（如运行了测试、手动验证了示例输入）；只说「已验证」而无具体内容不计
+limits:
+  timeout_s: 600
+notes: 公共辅助函数的名称与签名不限；保持公开函数签名不变是硬性要求（测试直接导入）。
