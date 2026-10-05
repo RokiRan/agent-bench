@@ -54,7 +54,7 @@ def main():
     lines.append("## 维度得分")
     lines.append("")
     header = "| 维度 | 得分 | 满分 |"
-    sep = "|---|---|---|---|"
+    sep = "|---|---|---|"
     if base:
         header += " 较基线 |"
         sep += "---|"
