@@ -1,0 +1,9 @@
+# Claude Code 对照组。需要本机已安装并登录 claude CLI。
+# 输出说明：--output-format json 的完整输出落盘为 trace 文件（非逐步 JSONL，
+# trace 类得分点需人工从中确认，或按规则记 0 并注明）；
+# result.json 缺失时 collect 会自动补占位，如需评"解释表达"，
+# 可人工从输出中提取 result 文本填入 {task_run}/result.json 的 summary 字段后再评分。
+name: claude-code
+command: "claude -p \"$(cat '{prompt_file}')\" --dangerously-skip-permissions --output-format json > '{trace_file}' 2>&1"
+timeout_s: 900
+env: {}

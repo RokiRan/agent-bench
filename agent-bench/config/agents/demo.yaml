@@ -1,0 +1,5 @@
+# 自测用假 Agent：直接应用题库标准答案。仅用于验证评测管线，不代表真实能力。
+name: demo
+command: "python3 {skill_root}/scripts/demo_agent.py --task-dir {task_dir} --workspace {workspace} --result {result_file} --trace {trace_file}"
+timeout_s: 300
+env: {}

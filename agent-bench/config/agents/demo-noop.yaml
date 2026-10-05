@@ -1,0 +1,6 @@
+# 自测用负向假 Agent：交白卷（不做任何修改）。用于验证低分路径与报告输出。
+name: demo-noop
+command: "python3 {skill_root}/scripts/demo_agent.py --task-dir {task_dir} --workspace {workspace} --result {result_file} --trace {trace_file}"
+timeout_s: 300
+env:
+  AB_NOOP: "1"

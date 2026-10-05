@@ -1,0 +1,6 @@
+# agent-bench 全局配置
+suite_default: v1.0        # 默认题库版本
+judge:
+  double_review_rate: 0.1  # 双评抽检比例
+runner:
+  default_timeout_s: 600   # 单题默认超时（任务 YAML 可覆盖）

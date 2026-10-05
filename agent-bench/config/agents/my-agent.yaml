@@ -1,0 +1,19 @@
+# 被测 Agent 接入配置（占位模板，使用前改成真实命令）。
+#
+# command 支持占位符：
+#   {prompt_file}  题干文件路径
+#   {workspace}    工作区目录（被测方在其中读写代码；命令以它为工作目录执行）
+#   {result_file}  输出 JSON 路径，格式 {"summary": "变更自述"}
+#   {trace_file}   轨迹 JSONL 路径（每步一行 {"type":..., "cmd"/"tool":..., ...}）
+#   {task_dir}     题目目录（含 task.yaml，一般不应读取，防作弊）
+#   {skill_root}   本 skill 根目录
+#
+# 输出契约：
+#   1. 直接修改 {workspace} 内的文件（collect 会对照快照生成 changes.diff）
+#   2. 写 {result_file}（"解释表达"维度依赖它；缺失则相关得分点为 0）
+#   3. 写 {trace_file}（"验证习惯"等 trace 得分点依赖它；缺失则相关得分点为 0）
+name: my-agent
+command: "my-agent run --task {prompt_file} --workspace {workspace} --output {result_file} --log {trace_file}"
+timeout_s: 600
+env:
+  MY_AGENT_API_KEY: "${MY_AGENT_API_KEY}"
