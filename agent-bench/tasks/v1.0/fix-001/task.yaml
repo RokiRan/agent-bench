@@ -1,0 +1,37 @@
+task_id: fix-001
+dimension: 调试修复
+points: 5
+prompt: workspace 中的 stats.py 提供 average() 函数。当输入空列表时它抛出 ZeroDivisionError。请修复：空列表时返回 0.0，并保持正常输入的行为不变。
+workspace: workspace
+gold_patch: |
+  --- a/stats.py
+  +++ b/stats.py
+  @@ -1,6 +1,8 @@
+   """统计工具函数。"""
+
+
+   def average(values):
+       """返回列表平均值。"""
+  +    if not values:
+  +        return 0.0
+       return sum(values) / len(values)
+scorecard:
+- item: 空列表输入返回 0 且不抛异常
+  type: exec
+  points: 2
+  check: test_empty.py
+- item: 正常输入结果不变
+  type: exec
+  points: 1
+  check: test_normal.py
+- item: 无无关改动
+  type: checklist
+  points: 1
+  criterion: changes.diff 只触及题目要求修改的函数；重排 import、改注释、格式化、改动其他函数均计为无关改动
+- item: 提交前主动运行过验证
+  type: trace
+  points: 1
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600
+notes: 接受提前返回或 try/except 两种等价写法；返回 0 或 0.0 均可。

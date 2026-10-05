@@ -1,0 +1,36 @@
+task_id: fix-003
+dimension: 调试修复
+points: 5
+prompt: workspace 中的 inventory.py 的 remove_out_of_stock() 在存在 0 库存商品时抛 RuntimeError（字典在迭代过程中被修改）。请修复，行为保持不变：移除所有值为 0 的键并返回字典。
+workspace: workspace
+gold_patch: |
+  --- a/inventory.py
+  +++ b/inventory.py
+  @@ -1,6 +1,6 @@
+   def remove_out_of_stock(inventory):
+       """移除库存为 0 的商品，返回更新后的字典。"""
+  -    for name, count in inventory.items():
+  +    for name, count in list(inventory.items()):
+           if count == 0:
+               del inventory[name]
+       return inventory
+scorecard:
+- item: 0 库存商品被移除且不抛异常
+  type: exec
+  points: 2
+  check: test_removes.py
+- item: 空字典与无 0 库存场景正确
+  type: exec
+  points: 1
+  check: test_edge.py
+- item: 无无关改动
+  type: checklist
+  points: 1
+  criterion: changes.diff 只触及题目要求修改的函数；重排 import、改注释、格式化、改动其他函数均计为无关改动
+- item: 提交前主动运行过验证
+  type: trace
+  points: 1
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600
+notes: 接受 list() 快照迭代或用字典推导式重建后返回；测试只校验返回值。
