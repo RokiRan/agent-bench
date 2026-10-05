@@ -1,0 +1,40 @@
+task_id: edit-002
+dimension: 编辑正确性
+points: 5
+prompt: 将 workspace 中 user.py 的 User.get_name 方法重命名为 display_name，并同步更新所有调用方，保证行为不变、旧方法名不再存在。
+workspace: workspace
+gold_patch: |
+  --- a/hello.py
+  +++ b/hello.py
+  @@ -1,5 +1,5 @@
+   from user import User
+
+
+   def hello(user):
+  -    return f"你好，{user.get_name()}"
+  +    return f"你好，{user.display_name()}"
+  --- a/user.py
+  +++ b/user.py
+  @@ -1,6 +1,6 @@
+   class User:
+       def __init__(self, name):
+           self.name = name
+
+  -    def get_name(self):
+  +    def display_name(self):
+           return self.name
+scorecard:
+- item: 行为不变（hello 与新方法）
+  type: exec
+  points: 2
+  check: test_behavior.py
+- item: 旧方法移除、新方法存在
+  type: exec
+  points: 2
+  check: test_rename.py
+- item: 无重命名之外的改动
+  type: checklist
+  points: 1
+  criterion: 除重命名相关行外无其他改动；顺手重构、加类型注解均计为不满足
+limits:
+  timeout_s: 600

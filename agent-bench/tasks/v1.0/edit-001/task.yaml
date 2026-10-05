@@ -1,0 +1,35 @@
+task_id: edit-001
+dimension: 编辑正确性
+points: 5
+prompt: 为 workspace 中 money.py 的 round_money 增加可选参数 precision（默认 2），支持自定义小数位数。约束：report.py 是现有调用方，不得修改，且其行为保持不变。
+workspace: workspace
+gold_patch: |
+  --- a/money.py
+  +++ b/money.py
+  @@ -1,3 +1,3 @@
+  -def round_money(amount):
+  -    """金额四舍五入到两位小数。"""
+  -    return round(amount, 2)
+  +def round_money(amount, precision=2):
+  +    """金额四舍五入，默认两位小数。"""
+  +    return round(amount, precision)
+scorecard:
+- item: 默认精度行为不变
+  type: exec
+  points: 1
+  check: test_default.py
+- item: 自定义精度生效
+  type: exec
+  points: 1
+  check: test_precision.py
+- item: 现有调用方行为不变
+  type: exec
+  points: 2
+  check: test_callers.py
+- item: 未修改 report.py
+  type: checklist
+  points: 1
+  criterion: changes.diff 中不包含 report.py 的任何改动
+limits:
+  timeout_s: 600
+notes: precision 必须以关键字/位置参数透传给 round；硬编码两位小数无法通过自定义精度断言。

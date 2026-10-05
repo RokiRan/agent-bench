@@ -1,0 +1,42 @@
+task_id: loc-002
+dimension: 代码定位
+points: 5
+prompt: workspace 中 config.py 定义默认配置，loader.py 负责用环境变量覆盖。文档约定设置 APP_PORT 环境变量可覆盖默认端口，但实际设置后 load_config() 仍返回默认的 "8080"。请定位并修复。
+workspace: workspace
+gold_patch: |
+  --- a/loader.py
+  +++ b/loader.py
+  @@ -1,16 +1,16 @@
+   """配置加载：环境变量覆盖默认值。"""
+   import os
+
+   from config import DEFAULTS
+
+  -PREFIX = "AP_"
+  +PREFIX = "APP_"
+
+
+   def load_config(env=None):
+       """返回配置字典。环境变量 APP_HOST / APP_PORT / APP_DEBUG 覆盖默认值。"""
+       env = os.environ if env is None else env
+       cfg = dict(DEFAULTS)
+       for key, value in env.items():
+           if key.startswith(PREFIX):
+               cfg[key[len(PREFIX):].lower()] = value
+       return cfg
+scorecard:
+- item: APP_ 前缀环境变量正确覆盖
+  type: exec
+  points: 2
+  check: test_override.py
+- item: 默认值与无关变量行为不变
+  type: exec
+  points: 1
+  check: test_defaults.py
+- item: 最小改动
+  type: checklist
+  points: 2
+  criterion: 只修改导致前缀失配的位置；重写整个加载逻辑、改动 config.py 均计为不满足
+limits:
+  timeout_s: 600
+notes: 根因是 PREFIX 常量拼写（AP_ 应为 APP_）。

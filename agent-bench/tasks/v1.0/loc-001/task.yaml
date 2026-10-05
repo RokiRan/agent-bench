@@ -1,0 +1,31 @@
+task_id: loc-001
+dimension: 代码定位
+points: 5
+prompt: workspace 是一个小型结算项目（cart.py 与 pricing.py）。用户反馈结算价偏低：checkout_total([("书", 100)], 0.1) 期望 90.0，实际却是 81.0。请定位问题并修复，保持模块职责清晰。
+workspace: workspace
+gold_patch: |
+  --- a/cart.py
+  +++ b/cart.py
+  @@ -1,9 +1,8 @@
+   """购物车结算。"""
+   from pricing import apply_discount
+
+
+   def checkout_total(items, discount):
+       """返回折扣后总价。items 为 (名称, 单价) 列表，discount 如 0.1。"""
+       total = sum(price for _, price in items)
+  -    discounted = apply_discount(total, discount)
+  -    return apply_discount(discounted, discount)
+  +    return apply_discount(total, discount)
+scorecard:
+- item: 结算总价正确（含多商品与零折扣场景）
+  type: exec
+  points: 3
+  check: test_total.py
+- item: 单点修复且未破坏模块职责
+  type: checklist
+  points: 2
+  criterion: 只移除 cart.py 中重复的一次折扣调用；不得修改 pricing.py 的折扣语义（如改公式、改舍入）来凑数
+limits:
+  timeout_s: 600
+notes: 正确修复是 cart.py 只调用一次 apply_discount。
