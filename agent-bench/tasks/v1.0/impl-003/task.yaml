@@ -1,0 +1,47 @@
+task_id: impl-003
+dimension: 功能实现
+points: 5
+prompt: 实现 workspace 中 ratelimit.py 的 RateLimiter：固定窗口限流，window 秒内最多放行 limit 次。构造函数签名为 RateLimiter(limit, window, now=None)，其中 now 是可注入的时钟（返回秒的可调用对象，默认 time.time），测试会注入假时钟，实现中不得直接使用 time.time() 的模块级调用替代 now。
+workspace: workspace
+gold_patch: |
+  --- a/ratelimit.py
+  +++ b/ratelimit.py
+  @@ -1,9 +1,24 @@
+  +"""限流器。"""
+  +import time
+  +
+  +
+   class RateLimiter:
+       """固定窗口限流器：window 秒内最多允许 limit 次。"""
+
+       def __init__(self, limit, window, now=None):
+  -        raise NotImplementedError
+  +        self.limit = limit
+  +        self.window = window
+  +        self.now = now or time.time
+  +        self._window_start = None
+  +        self._count = 0
+
+       def allow(self):
+           """本次调用是否放行。"""
+  -        raise NotImplementedError
+  +        t = self.now()
+  +        if self._window_start is None or t - self._window_start >= self.window:
+  +            self._window_start = t
+  +            self._count = 0
+  +        if self._count < self.limit:
+  +            self._count += 1
+  +            return True
+  +        return False
+scorecard:
+- item: 限流语义正确（放行/拦截/窗口重置）
+  type: exec
+  points: 4
+  check: test_limiter.py
+- item: 提交前主动运行过验证
+  type: trace
+  points: 1
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600
+notes: 滑动窗口等其他语义不算对，必须是固定窗口重置语义。

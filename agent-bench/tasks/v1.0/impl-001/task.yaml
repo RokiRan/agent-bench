@@ -1,0 +1,39 @@
+task_id: impl-001
+dimension: 功能实现
+points: 5
+prompt: 实现 workspace 中 csvtool.py 的 csv_total(path)：读取 CSV 文件，合计 amount 列（浮点）；amount 非数字的行跳过。workspace 中的 data.csv 可用于自测，其合计应为 15.0。
+workspace: workspace
+gold_patch: |
+  --- a/csvtool.py
+  +++ b/csvtool.py
+  @@ -1,3 +1,14 @@
+  +"""CSV 工具。"""
+  +import csv
+  +
+  +
+   def csv_total(path):
+       """读取 CSV 文件，返回 amount 列的合计（浮点）。"""
+  -    raise NotImplementedError
+  +    total = 0.0
+  +    with open(path, newline="", encoding="utf-8") as f:
+  +        for row in csv.DictReader(f):
+  +            try:
+  +                total += float(row.get("amount", ""))
+  +            except (TypeError, ValueError):
+  +                continue
+  +    return total
+scorecard:
+- item: fixture 合计正确
+  type: exec
+  points: 2
+  check: test_total.py
+- item: 坏行跳过、空表为 0
+  type: exec
+  points: 2
+  check: test_robust.py
+- item: 提交前主动运行过验证
+  type: trace
+  points: 1
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600

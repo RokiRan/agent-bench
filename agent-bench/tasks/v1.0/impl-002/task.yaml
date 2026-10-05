@@ -1,0 +1,49 @@
+task_id: impl-002
+dimension: 功能实现
+points: 5
+prompt: 实现 workspace 中 lru.py 的 LRUCache：容量有限；get 命中返回值并标记为最近使用（未命中返回 None）；put 写入，超出容量时淘汰最久未使用的项；重复 put 同一 key 视为更新并刷新其 recency。
+workspace: workspace
+gold_patch: |
+  --- a/lru.py
+  +++ b/lru.py
+  @@ -1,13 +1,25 @@
+  +"""LRU 缓存实现。"""
+  +from collections import OrderedDict
+  +
+  +
+   class LRUCache:
+       """容量有限的 LRU 缓存。"""
+
+       def __init__(self, capacity):
+  -        raise NotImplementedError
+  +        self.capacity = capacity
+  +        self._data = OrderedDict()
+
+       def get(self, key):
+           """命中返回值并标记为最近使用；未命中返回 None。"""
+  -        raise NotImplementedError
+  +        if key not in self._data:
+  +            return None
+  +        self._data.move_to_end(key)
+  +        return self._data[key]
+
+       def put(self, key, value):
+           """写入；超出容量时淘汰最久未使用的项。"""
+  -        raise NotImplementedError
+  +        if key in self._data:
+  +            self._data.move_to_end(key)
+  +        self._data[key] = value
+  +        if len(self._data) > self.capacity:
+  +            self._data.popitem(last=False)
+scorecard:
+- item: LRU 语义全部正确
+  type: exec
+  points: 4
+  check: test_lru.py
+- item: 提交前主动运行过验证
+  type: trace
+  points: 1
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600
+notes: 不限实现方式（OrderedDict 或手写链表均可）。
