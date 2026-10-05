@@ -1,0 +1,43 @@
+task_id: req-003
+dimension: 需求理解
+points: 5
+prompt: 实现 workspace 中 retry.py 的 retry(times) 装饰器：被装饰函数抛异常时自动重试，总共最多调用 times 次；全部失败则抛出最后一次的异常；成功则立即返回结果。times 最小视为 1。
+workspace: workspace
+gold_patch: |
+  --- a/retry.py
+  +++ b/retry.py
+  @@ -1,3 +1,22 @@
+  +"""重试装饰器。"""
+  +import functools
+  +
+  +
+   def retry(times):
+       """装饰器：函数抛异常时重试，最多调用 times 次。"""
+  -    raise NotImplementedError
+  +    times = max(1, int(times))
+  +
+  +    def decorator(func):
+  +        @functools.wraps(func)
+  +        def wrapper(*args, **kwargs):
+  +            last_exc = None
+  +            for _ in range(times):
+  +                try:
+  +                    return func(*args, **kwargs)
+  +                except Exception as exc:  # noqa: BLE001
+  +                    last_exc = exc
+  +            raise last_exc
+  +
+  +        return wrapper
+  +
+  +    return decorator
+scorecard:
+- item: 重试语义正确（成功即止/耗尽抛异常/成功不重试）
+  type: exec
+  points: 4
+  check: test_retry.py
+- item: 提交前主动运行过验证
+  type: trace
+  points: 1
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600

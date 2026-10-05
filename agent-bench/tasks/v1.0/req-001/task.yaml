@@ -1,0 +1,30 @@
+task_id: req-001
+dimension: 需求理解
+points: 5
+prompt: 实现 workspace 中 greet.py 的 greet(name)：name 为 None 或去除首尾空白后为空字符串时返回「你好，朋友」；否则返回「你好，{name}」，其中 {name} 为去除首尾空白后的名字。
+workspace: workspace
+gold_patch: |
+  --- a/greet.py
+  +++ b/greet.py
+  @@ -1,3 +1,5 @@
+   def greet(name):
+       """按需求实现问候语。"""
+  -    raise NotImplementedError
+  +    if name is None or not name.strip():
+  +        return "你好，朋友"
+  +    return f"你好，{name.strip()}"
+scorecard:
+- item: None/空白名字返回默认问候
+  type: exec
+  points: 2
+  check: test_default.py
+- item: 正常名字去空白后拼接正确
+  type: exec
+  points: 2
+  check: test_named.py
+- item: 提交前主动运行过验证
+  type: trace
+  points: 1
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600

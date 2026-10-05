@@ -1,0 +1,39 @@
+task_id: req-002
+dimension: 需求理解
+points: 5
+prompt: 实现 workspace 中 dateutil.py 的 parse_date(text)：支持「YYYY-MM-DD」与「YYYY/M/D」（如 2026-10-05、2026/10/5）两种格式，返回 (年, 月, 日) 整数元组；格式不符或日期非法（如 2026-02-30）时抛 ValueError。
+workspace: workspace
+gold_patch: |
+  --- a/dateutil.py
+  +++ b/dateutil.py
+  @@ -1,3 +1,13 @@
+  +"""日期解析工具。"""
+  +import datetime
+  +import re
+  +
+  +
+   def parse_date(text):
+       """解析日期字符串，返回 (年, 月, 日) 整数元组。"""
+  -    raise NotImplementedError
+  +    m = re.fullmatch(r"(\d{4})[-/](\d{1,2})[-/](\d{1,2})", text.strip())
+  +    if not m:
+  +        raise ValueError(f"无法解析的日期：{text!r}")
+  +    year, month, day = (int(g) for g in m.groups())
+  +    datetime.date(year, month, day)  # 校验日期合法性，非法则抛 ValueError
+  +    return year, month, day
+scorecard:
+- item: 两种格式解析正确
+  type: exec
+  points: 2
+  check: test_formats.py
+- item: 非法输入抛 ValueError
+  type: exec
+  points: 2
+  check: test_invalid.py
+- item: 提交前主动运行过验证
+  type: trace
+  points: 1
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600
+notes: 等价实现不限（split、datetime.strptime 均可）；datetime.strptime 不接受「2026/10/5」单 digit 月日混合格式时须能兼容。
