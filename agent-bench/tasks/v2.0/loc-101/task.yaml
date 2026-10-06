@@ -1,0 +1,57 @@
+task_id: loc-101
+dimension: 代码定位
+points: 10
+suite: v2.0
+difficulty: hard
+prompt: 用户反馈「改了邮箱后，个人页偶尔还是旧邮箱，刷新几次才好」。项目文件：models.py、cache.py、repo.py、service.py、api.py。请定位并修复，不得移除缓存功能。
+workspace: workspace
+gold_patch: |
+  --- a/repo.py
+  +++ b/repo.py
+  @@ -1,25 +1,25 @@
+   """用户存储与缓存。缓存键格式：user:{id}，缓存值为序列化后的 dict。"""
+   import copy
+
+   from cache import cache_get, cache_invalidate, cache_set
+   from models import User
+
+   _USERS = {1: User(1, "张三", "zhang@example.com")}
+
+
+   def _key(user_id):
+       return f"user:{user_id}"
+
+
+   def get_user(user_id):
+       cached = cache_get(_key(user_id))
+       if cached is not None:
+           return User(**cached)
+       user = _USERS[user_id]
+       cache_set(_key(user_id), {"id": user.id, "name": user.name, "email": user.email})
+       return copy.deepcopy(user)
+
+
+   def update_email(user_id, new_email):
+       _USERS[user_id].email = new_email
+  -    cache_invalidate(_USERS[user_id].name)  # 缓存键是 user:{id}，这里错用了姓名
+  +    cache_invalidate(_key(user_id))
+scorecard:
+- item: 更新后读到新值（缓存失效正确）
+  type: exec
+  points: 3
+  check: test_fresh_after_update.py
+- item: 缓存功能保留
+  type: exec
+  points: 2
+  check: test_cache_kept.py
+- item: 修在根因位置
+  type: checklist
+  points: 3
+  criterion: 修复点是 repo.py 中失效键的误用；通过删除/注释缓存写入、关闭缓存等绕过手段计为不满足
+- item: 提交前主动运行过验证
+  type: trace
+  points: 2
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600
+notes: 等价比解：update_email 改为按键失效，或同步刷新缓存内容；二者均可。

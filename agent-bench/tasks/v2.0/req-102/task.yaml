@@ -1,0 +1,53 @@
+task_id: req-102
+dimension: 需求理解
+points: 10
+suite: v2.0
+difficulty: hard
+prompt: |-
+  实现 workspace 中 order_fsm.py 的 transition(state, event)，规格如下：
+  - 状态：created → paid → shipped → completed；created 和 paid 可被 cancel 进入 cancelled；completed 与 cancelled 为终态
+  - 事件与迁移：pay（created→paid）、ship（paid→shipped）、confirm（shipped→completed）、cancel（created→cancelled 或 paid→cancelled）
+  - 非法组合（如 shipped+pay、completed+cancel、终态上的任何事件）必须 raise ValueError，且异常消息包含「非法状态迁移」
+  - 返回新状态字符串
+workspace: workspace
+gold_patch: |
+  --- a/order_fsm.py
+  +++ b/order_fsm.py
+  @@ -1,3 +1,17 @@
+  +"""订单状态机。"""
+  +
+  +_TRANSITIONS = {
+  +    ("created", "pay"): "paid",
+  +    ("paid", "ship"): "shipped",
+  +    ("shipped", "confirm"): "completed",
+  +    ("created", "cancel"): "cancelled",
+  +    ("paid", "cancel"): "cancelled",
+  +}
+  +
+  +
+   def transition(state, event):
+       """订单状态机：按规格推进状态，非法组合 raise ValueError。"""
+  -    raise NotImplementedError
+  +    try:
+  +        return _TRANSITIONS[(state, event)]
+  +    except KeyError:
+  +        raise ValueError(f"非法状态迁移：{state} + {event}") from None
+scorecard:
+- item: 全部合法迁移正确
+  type: exec
+  points: 3
+  check: test_legal.py
+- item: 全部非法组合正确拒绝
+  type: exec
+  points: 3
+  check: test_illegal.py
+- item: 实现完整而非用例特判
+  type: checklist
+  points: 2
+  criterion: 实现为查表或完整分支逻辑；只硬编码测试中出现的 (state, event) 组合计为不满足
+- item: 提交前主动运行过验证
+  type: trace
+  points: 2
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600
