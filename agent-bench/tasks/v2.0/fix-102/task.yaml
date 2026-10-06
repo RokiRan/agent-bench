@@ -1,0 +1,43 @@
+task_id: fix-102
+dimension: 调试修复
+points: 10
+suite: v2.0
+difficulty: hard
+prompt: 有用户反馈：10 月 5 日（周一）和 10 月 11 日（周日）明明属于同一周，周报系统却分成了两期；跨月交界处也有类似问题。report.py 的 is_same_week 以周一为一周起点，请修复。
+workspace: workspace
+gold_patch: |
+  --- a/report.py
+  +++ b/report.py
+  @@ -1,8 +1,9 @@
+   """周报工具。"""
+  +import datetime
+
+
+   def is_same_week(date_a, date_b):
+       """判断两个日期（YYYY-MM-DD）是否在同一自然周（周一为一周开始）。"""
+  -    y1, m1, d1 = (int(x) for x in date_a.split("-"))
+  -    y2, m2, d2 = (int(x) for x in date_b.split("-"))
+  -    return (y1, m1, d1 // 7) == (y2, m2, d2 // 7)
+  +    a = datetime.date.fromisoformat(date_a)
+  +    b = datetime.date.fromisoformat(date_b)
+  +    return a.isocalendar()[:2] == b.isocalendar()[:2]
+scorecard:
+- item: 周日/跨月/跨年等边界全部正确
+  type: exec
+  points: 4
+  check: test_boundaries.py
+- item: 常规场景不回归
+  type: exec
+  points: 2
+  check: test_basic.py
+- item: 未硬编码特定日期
+  type: checklist
+  points: 2
+  criterion: diff 中不出现 2026、10-05 等具体日期字面量；用通用历法逻辑（isocalendar 或等价的周一锚定计算）实现
+- item: 提交前主动运行过验证
+  type: trace
+  points: 2
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600
+notes: 以 ISO 周或周一锚定的通用算法均可；返回布尔值即可。

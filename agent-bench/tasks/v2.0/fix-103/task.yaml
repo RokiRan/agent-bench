@@ -1,0 +1,46 @@
+task_id: fix-103
+dimension: 调试修复
+points: 10
+suite: v2.0
+difficulty: hard
+prompt: 用户把 exporter.py 导出的 CSV 用 Excel 打开后，只要字段里含逗号或换行就整列错位。请修复 to_csv，使其输出符合标准 CSV 转义规则；不改变函数签名与返回类型（仍为 str），保持末尾换行行为。
+workspace: workspace
+gold_patch: |
+  --- a/exporter.py
+  +++ b/exporter.py
+  @@ -1,9 +1,13 @@
+   """数据导出。"""
+  +import csv
+  +import io
+
+
+   def to_csv(rows, headers):
+       """把记录列表导出为 CSV 文本。rows 为 dict 列表。"""
+  -    lines = [",".join(headers)]
+  +    buf = io.StringIO()
+  +    writer = csv.writer(buf, lineterminator="\n")
+  +    writer.writerow(headers)
+       for row in rows:
+  -        lines.append(",".join(str(row.get(h, "")) for h in headers))
+  -    return "\n".join(lines) + "\n"
+  +        writer.writerow([row.get(h, "") for h in headers])
+  +    return buf.getvalue()
+scorecard:
+- item: 含逗号/引号/换行的字段往返无损
+  type: exec
+  points: 4
+  check: test_roundtrip.py
+- item: 普通字段与末尾换行不回归
+  type: exec
+  points: 2
+  check: test_basic.py
+- item: 使用标准 CSV 转义
+  type: checklist
+  points: 2
+  criterion: 基于 csv 模块或等价的标准转义实现；用 replace 手工拼接逗号/引号的土法转义计为不满足
+- item: 提交前主动运行过验证
+  type: trace
+  points: 2
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600

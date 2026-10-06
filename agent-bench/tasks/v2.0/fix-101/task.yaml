@@ -1,0 +1,51 @@
+task_id: fix-101
+dimension: 调试修复
+points: 10
+suite: v2.0
+difficulty: hard
+prompt: 用户反馈「配送时效接口偶发返回的是运费金额」。项目含 decorators.py（通用装饰器）与 service.py（业务查询）。请定位并修复，要求：保留缓存能力，不得改动 service.py 中的业务数值。
+workspace: workspace
+gold_patch: |
+  --- a/decorators.py
+  +++ b/decorators.py
+  @@ -1,15 +1,15 @@
+   """通用装饰器工具。"""
+
+   _CACHE = {}
+
+
+   def memoize(func):
+       """缓存函数结果：相同参数直接返回缓存。"""
+
+       def wrapper(*args):
+  -        key = args
+  +        key = (func.__module__, func.__qualname__, args)
+           if key not in _CACHE:
+               _CACHE[key] = func(*args)
+           return _CACHE[key]
+
+       return wrapper
+scorecard:
+- item: 不同函数缓存互不串扰
+  type: exec
+  points: 3
+  check: test_isolation.py
+- item: 缓存能力保留且有效
+  type: exec
+  points: 2
+  check: test_cache_still_works.py
+- item: 未改动 service.py
+  type: checklist
+  points: 2
+  criterion: changes.diff 不包含 service.py 的任何改动
+- item: 修复方式正确而非绕过
+  type: checklist
+  points: 1
+  criterion: 缓存键包含函数身份（或等价隔离手段如每函数独立缓存）；直接删掉缓存、禁用 memoize 计为不满足
+- item: 提交前主动运行过验证
+  type: trace
+  points: 2
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600
+notes: 根因：模块级共享缓存且键不含函数身份。等价比解：每个被装饰函数持有独立缓存字典。
