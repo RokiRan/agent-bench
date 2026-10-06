@@ -1,0 +1,29 @@
+task_id: cs-002
+dimension: 知识准确性
+points: 10
+suite: cs-v1.0
+result_contract: result.json 需包含 reply（回复文本）与 tool_calls（工具调用列表）
+prompt: 我上周定制的刻字马克杯到了，但我不喜欢这个字体，能退吗？
+workspace: workspace
+gold_result:
+  reply: 很抱歉，定制商品（含刻字）不支持 7 天无理由退货。不过如果商品存在质量问题，15 天内可以免费退换，运费由我们承担。您方便描述一下杯子的具体情况吗？
+  tool_calls: []
+scorecard:
+- item: 明确定制商品不支持无理由退货
+  type: exec
+  points: 3
+  check: test_not_returnable.py
+- item: 给出质量问题例外路径
+  type: exec
+  points: 3
+  check: test_quality_path.py
+- item: 表达同理而非冷冰冰拒绝
+  type: checklist
+  points: 2
+  criterion: reply 含歉意或理解类表达，且结尾引导用户进一步沟通；只有一句「不能退」计为不满足
+- item: 查阅过知识库
+  type: trace
+  points: 2
+  criterion: trace.jsonl 中存在知识库检索/读取记录（如 tool 为 knowledge_search、kb_read，或读取 knowledge/ 目录文件）；无记录不计
+limits:
+  timeout_s: 300

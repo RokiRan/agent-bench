@@ -1,0 +1,29 @@
+task_id: cs-001
+dimension: 知识准确性
+points: 10
+suite: cs-v1.0
+result_contract: result.json 需包含 reply（回复文本）与 tool_calls（工具调用列表）
+prompt: 我在北京，昨天中午下的单，大概多久能收到？
+workspace: workspace
+gold_result:
+  reply: 北京地区为 3-5 个工作日送达，您的订单预计会在这个时间范围内到达。如果您想查询具体物流进度，把订单号发给我，我可以帮您查一下。
+  tool_calls: []
+scorecard:
+- item: 给出北京 3-5 天正确时效
+  type: exec
+  points: 3
+  check: test_window.py
+- item: 未给出错误时效（次日达/当天到）
+  type: exec
+  points: 3
+  check: test_no_wrong_window.py
+- item: 未编造政策外信息
+  type: checklist
+  points: 2
+  criterion: reply 中的时效、规则均出自 knowledge/shipping.md；出现政策外的承诺（如具体到某日几点必达）计为不满足
+- item: 查阅过知识库
+  type: trace
+  points: 2
+  criterion: trace.jsonl 中存在知识库检索/读取记录（如 tool 为 knowledge_search、kb_read，或读取 knowledge/ 目录文件）；无记录不计
+limits:
+  timeout_s: 300
