@@ -1,0 +1,29 @@
+task_id: cs-008
+dimension: 工具调用
+points: 10
+suite: cs-v1.0
+result_contract: result.json 需包含 reply（回复文本）与 tool_calls（工具调用列表）
+prompt: 收到的杯子碎了一个角，包装都压烂了，这也太离谱了，我要投诉！
+workspace: workspace
+gold_result:
+  reply: 非常抱歉收到破损的商品，这确实是我们物流环节的问题。我已经为您提交了「物流破损」售后工单，客服专员会在 24 小时内联系您处理赔付或补发事宜。
+  tool_calls:
+  - name: create_ticket
+    args:
+      category: 物流破损
+      description: 用户收到的杯子碎角，包装受压破损
+scorecard:
+- item: 调用 create_ticket 建单
+  type: exec
+  points: 4
+  check: test_ticket_tool.py
+- item: 分类正确（物流破损）
+  type: exec
+  points: 4
+  check: test_category.py
+- item: 有安抚表达
+  type: checklist
+  points: 2
+  criterion: reply 含歉意/理解类表达；只干巴巴说「已建单」计为不满足
+limits:
+  timeout_s: 300

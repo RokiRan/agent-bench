@@ -1,0 +1,28 @@
+task_id: cs-007
+dimension: 工具调用
+points: 10
+suite: cs-v1.0
+result_contract: result.json 需包含 reply（回复文本）与 tool_calls（工具调用列表）
+prompt: 帮我查一下订单 SF888999 的物流。
+workspace: workspace
+gold_result:
+  reply: 好的，正在为您查询订单 SF888999 的物流信息，请稍等。
+  tool_calls:
+  - name: query_order
+    args:
+      order_id: SF888999
+scorecard:
+- item: 只调用 query_order，不滥用其他工具
+  type: exec
+  points: 4
+  check: test_tool_name.py
+- item: 订单号参数精确（SF888999）
+  type: exec
+  points: 4
+  check: test_tool_args.py
+- item: 回复与用户有交代
+  type: checklist
+  points: 2
+  criterion: reply 告知用户正在查询/查询结果；只有工具调用而回复文不对题计为不满足
+limits:
+  timeout_s: 300

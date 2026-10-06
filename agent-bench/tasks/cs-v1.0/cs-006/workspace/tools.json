@@ -1,0 +1,6 @@
+{
+  "tools": [
+    {"name": "query_order", "description": "查询订单物流状态",
+     "args": {"order_id": "string"}}
+  ]
+}

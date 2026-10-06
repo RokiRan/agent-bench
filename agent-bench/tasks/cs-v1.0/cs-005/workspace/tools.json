@@ -1,0 +1,8 @@
+{
+  "tools": [
+    {"name": "query_order", "description": "查询订单物流状态",
+     "args": {"order_id": "string"}},
+    {"name": "urge_order", "description": "提交催单",
+     "args": {"order_id": "string"}}
+  ]
+}

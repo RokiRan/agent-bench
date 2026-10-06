@@ -1,0 +1,35 @@
+task_id: cs-006
+dimension: 上下文理解
+points: 10
+suite: cs-v1.0
+result_contract: result.json 需包含 reply（回复文本）与 tool_calls（工具调用列表）
+prompt: |-
+  以下是用户与客服的对话历史：
+
+  用户：你好，我的订单 SF123456789 什么时候发货？
+  客服：已为您记录订单 SF123456789，预计今天发出。
+  用户：帮我看看那个订单现在到哪了？
+
+  请作为客服，回复最后一条用户消息。
+workspace: workspace
+gold_result:
+  reply: 您之前咨询的订单 SF123456789，我现在就帮您查询最新的物流状态，请稍等。
+  tool_calls:
+  - name: query_order
+    args:
+      order_id: SF123456789
+scorecard:
+- item: 承接上文订单号（工具参数或回复引用）
+  type: exec
+  points: 6
+  check: test_context.py
+- item: 未重复追问已知信息
+  type: checklist
+  points: 2
+  criterion: reply 直接处理「那个订单」，不再向用户索要订单号；重复索要计为不满足
+- item: 查阅过知识库
+  type: trace
+  points: 2
+  criterion: trace.jsonl 中存在知识库检索/读取记录（如 tool 为 knowledge_search、kb_read，或读取 knowledge/ 目录文件）；无记录不计
+limits:
+  timeout_s: 300

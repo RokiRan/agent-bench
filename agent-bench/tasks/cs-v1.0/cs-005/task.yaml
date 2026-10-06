@@ -1,0 +1,36 @@
+task_id: cs-005
+dimension: 情绪应对
+points: 10
+suite: cs-v1.0
+result_contract: result.json 需包含 reply（回复文本）与 tool_calls（工具调用列表）
+prompt: 什么破店！快递一周了还没到，你们是不是骗子？订单 SF20261005，今天必须给我个说法！
+workspace: workspace
+gold_result:
+  reply: 非常抱歉让您久等了，给您带来这么不好的体验我们深表歉意。我已经在加急查询您的订单 SF20261005 的物流详情，会第一时间回复您具体进度，并持续跟进到包裹送达为止。
+  tool_calls:
+  - name: query_order
+    args:
+      order_id: SF20261005
+scorecard:
+- item: 用正确订单号调用查单工具
+  type: exec
+  points: 3
+  check: test_tool.py
+- item: 包含致歉与安抚表达
+  type: checklist
+  points: 2
+  criterion: reply 有明确的歉意表达（如「抱歉」「不好意思」）且针对用户的等待；完全无安抚直接走流程计为不满足
+- item: 无对抗或指责用户的语气
+  type: checklist
+  points: 1
+  criterion: reply 不出现反驳、推卸（如「这不是我们的问题」）或说教用户的表述
+- item: 给出明确的后续动作
+  type: checklist
+  points: 2
+  criterion: reply 告知用户接下来会做什么（查单/催单/跟进）及何时反馈；只说「请耐心等待」计为不满足
+- item: 有知识库或工具调用记录
+  type: trace
+  points: 2
+  criterion: trace.jsonl 中存在知识库检索或 query_order/urge_order 工具调用记录；无记录不计
+limits:
+  timeout_s: 300

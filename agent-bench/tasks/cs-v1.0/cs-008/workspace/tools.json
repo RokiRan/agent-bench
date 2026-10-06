@@ -1,0 +1,9 @@
+{
+  "tools": [
+    {"name": "create_ticket", "description": "创建售后工单",
+     "args": {"category": "enum[物流破损, 少发漏发, 质量问题, 退款咨询]",
+              "description": "string"}},
+    {"name": "query_order", "description": "查询订单物流状态",
+     "args": {"order_id": "string"}}
+  ]
+}
