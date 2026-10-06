@@ -1,0 +1,29 @@
+task_id: cs-010
+dimension: 澄清与引导
+points: 10
+suite: cs-v1.0
+result_contract: result.json 需包含 reply（回复文本）与 tool_calls（工具调用列表）
+prompt: 我要退货。
+workspace: workspace
+gold_result:
+  reply: 好的，我来协助您办理退货。麻烦先提供一下订单号和要退的商品名称，另外想确认一下：商品已经签收了吗？
+  tool_calls: []
+scorecard:
+- item: 主动询问订单号等必要信息
+  type: exec
+  points: 3
+  check: test_asks_order.py
+- item: 未在信息不足时直接承诺办理
+  type: exec
+  points: 3
+  check: test_no_premature.py
+- item: 澄清问题聚焦且不过度
+  type: checklist
+  points: 2
+  criterion: 问题聚焦订单/商品/签收状态等必要信息（≤3 个）；连珠炮式问 5 个以上问题计为不满足
+- item: 语气友好
+  type: checklist
+  points: 2
+  criterion: reply 态度积极（如「好的，我来协助您」）；生硬质问式提问计为不满足
+limits:
+  timeout_s: 300

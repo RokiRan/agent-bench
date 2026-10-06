@@ -48,6 +48,10 @@ def main():
     run_dir = Path(args.run)
     index = json.loads((run_dir / "dispatch_index.json").read_text(encoding="utf-8"))
 
+    # 专项套件（如客服 cs-*）产出在 result.json，工作区不变属于正常
+    suite_dir = Path(__file__).resolve().parent.parent / "tasks" / index.get("suite", "")
+    conversational = (suite_dir / ".conversational").exists()
+
     report = []
     for entry in index["tasks"]:
         tid = entry["task_id"]
@@ -64,7 +68,7 @@ def main():
 
         diff = make_diff(orig, ws)
         (tdir / "changes.diff").write_text(diff, encoding="utf-8")
-        if not diff.strip() and entry["status"] == "ok":
+        if not diff.strip() and entry["status"] == "ok" and not conversational:
             notes.append("工作区无任何改动")
 
         report.append({"task_id": tid, "status": entry["status"], "notes": notes})

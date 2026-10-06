@@ -10,6 +10,8 @@
 - `trace.jsonl`：被测方运行轨迹（可能缺失）
 - pending 清单：`score_detail.json` 中 `status=pending` 的得分点
 
+客服专项（cs-*）说明：被测方产出为 `result.json` 的 `reply`（回复文本）与 `tool_calls`（工具调用列表），`changes.diff` 通常为空，判定以 `result.json` 与 `trace.jsonl` 为准。
+
 ## 判定规则
 
 1. 逐条对照 `criterion` 判定，默认二分：满足给满分，不满足给 0 分；criterion 写明分档的除外。

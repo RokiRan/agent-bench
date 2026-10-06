@@ -51,6 +51,19 @@ def main():
     task = yaml.safe_load((Path(args.task_dir) / "task.yaml").read_text(encoding="utf-8"))
     noop = os.environ.get("AB_NOOP") == "1"
 
+    # 客服专项（cs-*）：产出为 result.json 的 reply / tool_calls
+    if not noop and task.get("gold_result"):
+        gr = task["gold_result"]
+        result_obj = {"summary": gr.get("summary", "已完成客服回复"),
+                      "reply": gr.get("reply", ""),
+                      "tool_calls": gr.get("tool_calls", [])}
+        Path(args.result).write_text(
+            json.dumps(result_obj, ensure_ascii=False, indent=2), encoding="utf-8")
+        log = [{"type": "tool_call", "tool": "knowledge_search", "ok": True}]
+        Path(args.trace).write_text(
+            "\n".join(json.dumps(l, ensure_ascii=False) for l in log) + "\n", encoding="utf-8")
+        return
+
     if not noop:
         if task.get("gold_patch"):
             apply_patch(task["gold_patch"], ws)

@@ -12,6 +12,12 @@
 #   1. 直接修改 {workspace} 内的文件（collect 会对照快照生成 changes.diff）
 #   2. 写 {result_file}（"解释表达"维度依赖它；缺失则相关得分点为 0）
 #   3. 写 {trace_file}（"验证习惯"等 trace 得分点依赖它；缺失则相关得分点为 0）
+#
+# 客服专项套件（cs-*）追加契约：
+#   {result_file} 需包含 {"reply": "回复文本", "tool_calls": [{"name": ..., "args": {...}}],
+#                         "summary": "可选"}
+#   {trace_file} 中应包含知识库检索记录（如 {"tool": "knowledge_search", ...}），
+#   "查阅过知识库"得分点依赖它。
 name: my-agent
 command: "my-agent run --task {prompt_file} --workspace {workspace} --output {result_file} --log {trace_file}"
 timeout_s: 600
