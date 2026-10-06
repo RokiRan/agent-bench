@@ -1,0 +1,99 @@
+task_id: long-101
+dimension: 长程任务
+points: 10
+suite: v2.0
+difficulty: hard
+prompt: 多步任务：①将 Product 的字段 title 重命名为 name（检查并更新所有受影响的文件，to_dict 输出的 JSON 键也要改）；②为 price 增加校验：负数时 raise ValueError，消息包含「价格非法」；③在 tests/ 中补充对重命名字段与价格校验的测试；④运行全部测试确保通过。
+workspace: workspace
+gold_patch: |
+  --- a/models.py
+  +++ b/models.py
+  @@ -1,12 +1,14 @@
+   """数据模型。"""
+   import json
+
+
+   class Product:
+  -    def __init__(self, sku, title, price):
+  +    def __init__(self, sku, name, price)
+  +        if price < 0:
+  +            raise ValueError(f"价格非法：{price}")
+           self.sku = sku
+  -        self.title = title
+  +        self.name = name
+           self.price = price
+
+       def to_dict(self):
+  -        return {"sku": self.sku, "title": self.title, "price": self.price}
+  +        return {"sku": self.sku, "name": self.name, "price": self.price}
+  --- a/store.py
+  +++ b/store.py
+  @@ -1,16 +1,16 @@
+   """商品仓库。"""
+   from models import Product
+
+   PRODUCTS = [Product("A001", "马克杯", 49.9)]
+
+
+   def find_by_sku(sku):
+       for p in PRODUCTS:
+           if p.sku == sku:
+               return p
+       return None
+
+
+   def describe(sku):
+       p = find_by_sku(sku)
+  -    return f"{p.title}（{p.sku}）" if p else None
+  +    return f"{p.name}（{p.sku}）" if p else None
+  --- a/tests/test_product.py
+  +++ b/tests/test_product.py
+  @@ -0,0 +1,14 @@
+  +import pytest
+  +
+  +from models import Product
+  +
+  +
+  +def test_name_field():
+  +    p = Product("A002", "键盘", 99.0)
+  +    assert p.to_dict()["name"] == "键盘"
+  +    assert "title" not in p.to_dict()
+  +
+  +
+  +def test_negative_price_rejected():
+  +    with pytest.raises(ValueError, match="价格非法"):
+  +        Product("A003", "鼠标", -1)
+  --- a/tests/test_store.py
+  +++ b/tests/test_store.py
+  @@ -1,5 +1,5 @@
+   from store import find_by_sku
+
+
+   def test_find():
+  -    assert find_by_sku("A001").title == "马克杯"
+  +    assert find_by_sku("A001").name == "马克杯"
+scorecard:
+- item: 全部测试通过（以被测方更新后的 tests/ 为准，含新增测试）
+  type: exec
+  points: 3
+  check: ws:tests
+- item: 重命名贯通到 JSON 输出与调用方
+  type: exec
+  points: 2
+  check: test_structure.py
+- item: 价格校验正确（负拒零收）
+  type: exec
+  points: 2
+  check: test_validation.py
+- item: 无 title 残留引用
+  type: checklist
+  points: 1
+  criterion: 改动完成后项目代码与测试中不再存在 .title / \"title\" 引用（changes.diff 与最终文件均不含）
+- item: 提交前主动运行过验证
+  type: trace
+  points: 2
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600
+notes: 本任务明确要求修改 tests/，allow_test_changes=true。
+allow_test_changes: true

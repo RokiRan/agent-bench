@@ -1,0 +1,43 @@
+task_id: impl-101
+dimension: 功能实现
+points: 10
+suite: v2.0
+difficulty: hard
+prompt: 实现 workspace 中 topk.py 的 topk_frequent(stream, k)：返回出现次数最多的前 k 个元素，按频次降序、频次相同按元素升序，返回 [(元素, 次数), ...]。性能要求：20 万元素须在 1 秒内完成（判分里有耗时断言）。
+workspace: workspace
+gold_patch: |
+  --- a/topk.py
+  +++ b/topk.py
+  @@ -1,7 +1,11 @@
+  +from collections import Counter
+  +
+  +
+   def topk_frequent(stream, k):
+       """返回 stream 中出现次数最多的前 k 个元素。
+
+       按频次降序；频次相同按元素升序。返回 [(元素, 次数), ...]。
+       性能要求：20 万元素应在 1 秒内完成。
+       """
+  -    raise NotImplementedError
+  +    counts = Counter(stream)
+  +    return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:k]
+scorecard:
+- item: 排序与平局规则正确
+  type: exec
+  points: 4
+  check: test_correct.py
+- item: 20 万元素 1 秒内完成
+  type: exec
+  points: 3
+  check: test_perf.py
+- item: 实现非暴力
+  type: checklist
+  points: 1
+  criterion: 基于计数/哈希一次遍历统计；对每个唯一元素全表 count 的 O(n·u) 写法即使超时前跑完也计为不满足
+- item: 提交前主动运行过验证
+  type: trace
+  points: 2
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600
+notes: Counter、手写哈希计数、堆均可；核心是线性统计 + 排序/堆取前 k。

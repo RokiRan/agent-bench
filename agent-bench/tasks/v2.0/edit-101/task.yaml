@@ -1,0 +1,39 @@
+task_id: edit-101
+dimension: 编辑正确性
+points: 10
+suite: v2.0
+difficulty: hard
+prompt: 为 fetcher.py 的 fetch 增加超时参数 timeout（单位秒，默认 10），返回内容格式升级为 f"<content of {url} after {retries} retries, timeout {timeout}s>"。硬约束：pipeline.py / notify.py / report.py 三个调用方一个字符都不许改，且它们的位置传参语义必须保持不变。
+workspace: workspace
+gold_patch: |
+  --- a/fetcher.py
+  +++ b/fetcher.py
+  @@ -1,6 +1,6 @@
+   """HTTP 抓取工具。"""
+
+
+  -def fetch(url, retries=3):
+  +def fetch(url, retries=3, timeout=10):
+       """抓取 url，失败重试 retries 次。返回 (状态码, 内容)。"""
+  -    return 200, f"<content of {url} after {retries} retries>"
+  +    return 200, f"<content of {url} after {retries} retries, timeout {timeout}s>"
+scorecard:
+- item: 三个调用方位置传参行为不变
+  type: exec
+  points: 3
+  check: test_compat.py
+- item: timeout 参数生效（默认/关键字/位置）
+  type: exec
+  points: 3
+  check: test_timeout.py
+- item: 调用方零改动
+  type: checklist
+  points: 2
+  criterion: changes.diff 不包含 pipeline.py、notify.py、report.py 的任何改动
+- item: 提交前主动运行过验证
+  type: trace
+  points: 2
+  criterion: trace.jsonl 中存在测试/运行命令（python、pytest、unittest 等）且其结果非报错；命令本身报错或不存在不计
+limits:
+  timeout_s: 600
+notes: 把 timeout 插到中间位置导致位置传参错位是错误解法；追加到末尾或 keyword-only 均可。
