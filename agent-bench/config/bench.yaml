@@ -1,15 +1,21 @@
 # agent-bench 全局配置
-suite_default: v1.0        # 默认题库版本
+suite_default: v1.0        # 默认题库版本（冒烟回归）
 
 # 套件登记表：套件与目录一一对应，通用测试与专项测试严格隔离。
 # 一次评测只跑一个套件；不同套件分数不对比、不合并。
 suites:
   v1.0:
-    name: 通用编码能力
+    name: 通用编码能力（基础/冒烟卷）
     dir: tasks/v1.0
     tasks: 20
     points: 100
     rubric: rubrics/dimensions.md
+  v2.0:
+    name: 通用编码能力·进阶（高难度，能力区分主卷）
+    dir: tasks/v2.0
+    tasks: 10
+    points: 100
+    rubric: rubrics/dimensions-v2.md
   cs-v1.0:
     name: 专项·智能客服
     dir: tasks/cs-v1.0

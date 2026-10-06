@@ -4,16 +4,18 @@
 
 ## 套件体系：通用测试与专项测试严格隔离
 
-| 套件 | 目录 | 对象 | 规模 |
+| 套件 | 目录 | 定位 | 规模 |
 |---|---|---|---|
-| 通用编码能力 `v1.0` | `tasks/v1.0/` | 编码 Agent | 20 题 / 100 分 / 9 维度 |
-| 专项·智能客服 `cs-v1.0` | `tasks/cs-v1.0/` | 客服 Agent | 10 题 / 100 分 / 7 维度 |
+| 通用编码·基础 `v1.0` | `tasks/v1.0/` | 冒烟/回归 | 20 题 / 100 分 / 9 维度 |
+| 通用编码·进阶 `v2.0` | `tasks/v2.0/` | 能力区分主卷（高难度） | 10 题 / 100 分 / 7 维度 |
+| 专项·智能客服 `cs-v1.0` | `tasks/cs-v1.0/` | 客服 Agent 专项 | 10 题 / 100 分 / 7 维度 |
 
 隔离规则：**一次评测只跑一个套件；不同套件分数不对比、不合并**；baseline 仅限同套件（report.py 强制校验）。
 
 ## 特性
 
-- **双套件**：通用编码（调试修复、需求理解、代码定位、编辑正确性、功能实现、验证习惯、解释表达、安全边界、长程任务）+ 客服专项（知识准确性、边界与拒答、情绪应对、上下文理解、工具调用、合规与安全、澄清与引导）
+- **难度分级**：v1.0 基础冒烟；v2.0 进阶区分（多文件项目、只给症状不给位置、隐蔽缺陷、性能门槛、注入诱饵）
+- **专项覆盖**：客服专项考察知识准确性、边界拒答、情绪应对、上下文理解、工具调用、合规安全、澄清引导
 - **打分卡 checklist 化**：每个得分点都有可客观判断的标准与证据要求，谁评都一个分
 - **安全红线**：越界删除文件、泄露密钥等行为一票否决，整题判零并标红
 - **评分可复现**：exec 段全自动跑 pytest；checklist/trace 按固化规则判定，支持双评抽检
@@ -28,8 +30,9 @@ pip install pyyaml pytest
 # 1. 配置被测方 adapter（改成你的 Agent CLI 命令）
 vim agent-bench/config/agents/my-agent.yaml
 
-# 2. 分发做题：通用套件默认 v1.0；客服专项加 --suite cs-v1.0
+# 2. 分发做题：通用基础默认 v1.0；进阶区分度 --suite v2.0；客服专项 --suite cs-v1.0
 python3 agent-bench/scripts/dispatch.py --agent my-agent --runs-dir runs
+python3 agent-bench/scripts/dispatch.py --agent my-agent --suite v2.0 --runs-dir runs
 python3 agent-bench/scripts/dispatch.py --agent my-agent --suite cs-v1.0 --runs-dir runs
 
 # 3. 收卷（生成 changes.diff，校验输出契约）
@@ -45,13 +48,13 @@ python3 agent-bench/scripts/score.py --run runs/<run_id> --phase judged --judgme
 python3 agent-bench/scripts/report.py --run runs/<run_id>
 ```
 
-自测（无需真实 Agent）：`--agent demo` 应用标准答案应得满分；`--agent demo-noop` 交白卷用于验证低分路径。两个套件通用。
+自测（无需真实 Agent）：`--agent demo` 应用标准答案应得满分；`--agent demo-noop` 交白卷用于验证低分路径。所有套件通用。
 
 ## 被测方接入契约
 
 adapter 命令支持占位符：`{prompt_file}`（题干）、`{workspace}`（工作区，命令以它为工作目录执行）、`{result_file}`、`{trace_file}`。
 
-通用套件（v1.0）：
+通用套件（v1.0 / v2.0）：
 
 1. 直接修改 `{workspace}` 内的文件（收卷时对照快照生成 diff）
 2. 写 `{result_file}`：`{"summary": "变更自述"}`
@@ -72,8 +75,9 @@ agent-bench/
 │   └── agents/         # 被测方 adapter（CLI 命令模板）
 ├── rubrics/            # 评分器规则 + 各套件维度定义
 ├── tasks/
-│   ├── v1.0/           # 通用编码套件（20 题）
-│   └── cs-v1.0/        # 智能客服专项套件（10 题）
+│   ├── v1.0/           # 通用编码·基础（20 题）
+│   ├── v2.0/           # 通用编码·进阶（10 题，高难度）
+│   └── cs-v1.0/        # 智能客服专项（10 题）
 └── scripts/            # dispatch / collect / score / report / demo_agent
 ```
 

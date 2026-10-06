@@ -1,6 +1,6 @@
 ---
 name: agent-bench
-description: 轻量 Agent 评测基准（固定题库 + 标准答案 + 打分卡）。当用户要求测试、评测、打分、对比一个 CLI 形态的 Agent（如 my-agent、claude-code、codex、智能客服 Agent），或提到 agent-bench、跑一轮评测、出评测报告、验证 Agent 版本质量、回归测试 Agent、客服 Agent 专项测试/客服能力评测时使用。覆盖 CLI 自动分发做题、答案回收、三段式评分（exec/checklist/trace）、安全红线检查与 Markdown 报告生成。套件体系：通用编码能力（tasks/v1.0）与专项能力（如智能客服 tasks/cs-v1.0）严格隔离、独立评分。
+description: 轻量 Agent 评测基准（固定题库 + 标准答案 + 打分卡）。当用户要求测试、评测、打分、对比一个 CLI 形态的 Agent（如 my-agent、claude-code、codex、智能客服 Agent），或提到 agent-bench、跑一轮评测、出评测报告、验证 Agent 版本质量、回归测试 Agent、客服 Agent 专项测试/客服能力评测、高难度编码能力评测时使用。覆盖 CLI 自动分发做题、答案回收、三段式评分（exec/checklist/trace）、安全红线检查与 Markdown 报告生成。套件体系：通用编码能力（基础 tasks/v1.0、进阶 tasks/v2.0）与专项能力（如智能客服 tasks/cs-v1.0）严格隔离、独立评分。
 ---
 
 # agent-bench
@@ -22,15 +22,16 @@ python3 + pytest + PyYAML。被测方通过 `config/agents/{name}.yaml` 的 adap
 
 | 套件 | 目录 | 对象 | 产出契约 |
 |---|---|---|---|
-| 通用编码能力 `v1.0` | `tasks/v1.0/` | 编码 Agent | 修改工作区代码 + result.json(summary) |
+| 通用编码·基础 `v1.0` | `tasks/v1.0/` | 编码 Agent（冒烟/回归） | 修改工作区代码 + result.json(summary) |
+| 通用编码·进阶 `v2.0` | `tasks/v2.0/` | 编码 Agent（能力区分主卷） | 同上 |
 | 专项·智能客服 `cs-v1.0` | `tasks/cs-v1.0/` | 客服 Agent | result.json(reply + tool_calls)，不改工作区 |
 
 隔离规则（必须遵守）：
 
 1. **一次评测只跑一个套件**（`--suite` 只接受一个值），不同套件的题目绝不同场混跑。
-2. **分数不跨套件对比、不合并**：通用套件 100 分与客服套件 100 分是两套独立标尺；`--baseline` 仅限同套件（report.py 强制校验）。
-3. **选择规则**：测试客服 Agent 的对话/应答能力 → `--suite cs-v1.0`；测试通用编码能力 → 默认 `v1.0`；用户未指明时按其 Agent 类型选择并口头确认。
-4. 各套件维度定义分开维护：通用见 `rubrics/dimensions.md`，客服见 `rubrics/dimensions-cs.md`。
+2. **分数不跨套件对比、不合并**：三套 100 分是独立标尺；`--baseline` 仅限同套件（report.py 强制校验）。
+3. **选择规则**：测试客服 Agent → `--suite cs-v1.0`；通用编码能力区分/版本质量判定 → `--suite v2.0`；日常快速冒烟回归 → 默认 `v1.0`；用户未指明时按其 Agent 类型与目的选择并口头确认。
+4. 各套件维度定义分开维护：`rubrics/dimensions.md`（v1.0）、`rubrics/dimensions-v2.md`（v2.0）、`rubrics/dimensions-cs.md`（cs-v1.0）。
 5. 客服套件的被测方输出契约：`result.json` 需含 `reply`（回复文本）与 `tool_calls`（工具调用列表，可为空）；trace.jsonl 中应有知识库检索记录（"查阅过知识库"得分点依赖它）。
 6. 新增专项套件：复制 `tasks/cs-v1.0/` 的结构新建 `tasks/{领域}-v1.0/`，并在 `config/bench.yaml` 的 `suites` 中登记；会话型套件在套件目录放 `.conversational` 标记文件。
 
@@ -54,7 +55,7 @@ python3 + pytest + PyYAML。被测方通过 `config/agents/{name}.yaml` 的 adap
 ## 判定时必读
 
 - `rubrics/judge_prompt.md`：判定规则、证据要求、judgments.json 格式。**判定 pending 项前必读。**
-- `rubrics/dimensions.md` / `rubrics/dimensions-cs.md`：通用套件九个维度 / 客服套件七个维度的定义，解读报告时按套件选用。
+- `rubrics/dimensions.md` / `rubrics/dimensions-v2.md` / `rubrics/dimensions-cs.md`：各套件维度定义，解读报告时按套件选用。
 
 ## 红线
 
